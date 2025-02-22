@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jevaan Care - Your AI Health Assistant</title>
+    <title>Jeevan Care - Your AI Health Assistant</title>
     <link rel="stylesheet" href="./static/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
@@ -16,7 +16,7 @@
                 <li><a href="#pricing">Pricing</a></li>
                 <li><a href="#hero">About</a></li>
             </ul>
-            <button class="btn btn-secondary" id="bt">Log in</button>
+            <!--<button class="btn btn-secondary" id="bt">Log in</button>-->
         </nav>
     </header>
     
@@ -25,8 +25,8 @@
             <h1>AI-Powered Health Assistant</h1>
             <p class="lead">Get instant health insights and personalized recommendations powered by advanced AI technology.</p>
             <div class="cta-buttons">
-                <button class="btn btn-primary" id="startTrialButton">Start Free Trial</button>
-                <button class="btn btn-outline">Watch Demo</button>
+                <button class="btn btn-primary cta-btn" id="startTrialButton">Try me!</button>
+                <button class="btn btn-outline cta-btn" onclick="openWindow();">Watch Demo</button>
             </div>
         </div>
     </section>
@@ -77,7 +77,6 @@
                         <li>Comprehensive Health Tracking</li>
                         <li>Report Generation Feature</li>
                         <li>Unlimited AI Insights</li>
-                        
                     </ul>
                     <button class="btn btn-primary">Choose Plan</button>
                 </div>
@@ -139,9 +138,33 @@
     const startTrialButton = document.getElementById('startTrialButton');
 
     startTrialButton.addEventListener('click', () => {
-    window.location.href = 'trans.html';
+        window.location.href = 'trans.html';
     });
+
+    function openWindow() {
+        const modalContent = `
+            <section class="modal-main">
+                <h3>How to use?</h3>
+                <img class="card-img-top img-thumbnail" src="/static/media/pathfinder.67aa2ccb.gif" alt="Card image cap" style="margin-bottom: 5px;">
+                <button class="btn btn-outline-success my-2 my-sm-0" type="button" onclick="closeModal()">Close</button>
+            </section>
+        `;
+        const modal = document.createElement('div');
+        modal.classList.add('modal');
+        modal.innerHTML = modalContent;
+        document.body.appendChild(modal);
+    }
+
+    function closeModal() {
+        const modal = document.querySelector('.modal');
+        if (modal) {
+            document.body.removeChild(modal);
+        }
+    }
+
+    function setValue(value) {
+        document.getElementById('value').value = value;
+    }
 </script>
 </body>
 </html>
-

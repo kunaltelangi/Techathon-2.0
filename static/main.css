@@ -9,6 +9,16 @@
   --gray: #64748b;
   --light-gray: #e2e8f0;
 }
+.cta-buttons .btn {
+  width: 180px; /* Adjust as needed */
+  text-align: center;
+}
+
+
+.cta-btn {
+  width: 180px; /* Ensures both buttons have the same width */
+}
+
 
 * {
   margin: 0;
