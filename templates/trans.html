@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jeevan Care</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <style>
+    .header {
+      background-color: #0b1585;
+    }
+    /* Basic styling for the interface */
+    .transcript-container {
+      display: flex;
+      justify-content: space-between;
+      margin: 20px;
+      align-items: stretch; /* Ensure both children have equal height */
+    }
+    .transcript, .legend {
+      width: 48%;
+      background-color: white;
+      padding: 15px;
+      border-radius: 6px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    .diagnosis-box, .precautions-box, .clinic-box {
+      background-color: #f7f7f7;
+      border: 1px solid #ddd;
+      padding: 15px;
+      margin: 20px auto;
+      border-radius: 8px;
+      width: 70%;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    .diagnosis-box h2, .precautions-box h2, .clinic-box h2 {
+      margin-top: 0;
+    }
+    button {
+      padding: 10px 15px;
+      margin: 5px;
+    }
+    #language-select {
+      padding: 8px 12px;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      background-color: #fff;
+      cursor: pointer;
+      transition: border 0.2s ease-in-out;
+      outline: none;
+    }
+    #language-select:hover,
+    #language-select:focus {
+      border-color: #2980b9;
+    }
+    /* Styling for the instructions inside the legend */
+    .instructions {
+      margin-top: 15px;
+      font-size: 14px;
+      color: #555;
+      border-top: 1px solid #ccc;
+      padding-top: 10px;
+    }
+    .instructions h4 {
+      margin: 0 0 8px 0;
+    }
+    .instructions ul {
+      padding-left: 20px;
+    }
+    .instructions li {
+      margin-bottom: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1 style="color: white;">Jeevan Care</h1>
+  </div>
+  <div class="container">
+    <div class="controls" style="display: flex; align-items: center; justify-content: center; gap: 15px;">
+      <button id="toggle-btn" class="mic-off">🎤 Start Recording</button>
+      <div class="language-select">
+        <label for="language-select">Select Language: </label>
+        <select id="language-select">
+          <option value="english" selected>English</option>
+          <option value="hindi">हिन्दी (Hindi)</option>
+          <option value="generic">Generic</option>
+        </select>
+      </div>
+      <button id="generate-report-btn" class="report-button" style="display: none;">📄 Generate Report</button>
+    </div>
+    
+    <div class="transcript-container">
+      <div class="transcript">
+        <h2>Real-Time Transcript</h2>
+        <pre id="transcript-text"></pre>
+      </div>
+      <div class="legend">
+        <h3>Highlights</h3>
+        <p><span class="anatomy">Anatomy</span></p>
+        <p><span class="medical-history">Medical History</span></p>
+        <p><span class="medication">Medication</span></p>
+        <p><span class="phi">Protected Health Information</span></p>
+        <p><span class="tests">Tests & Treatments</span></p>
+        <p><span style="color: blue;">Predicted Diagnosis</span></p>
+        
+        <!-- Instructions Container -->
+        <div class="instructions">
+          <h4>Instructions</h4>
+          <ul>
+            <li>Press the "Start Recording" button to begin the transcription process.</li>
+            <li>For best accuracy, please provide detailed information including the patient's name, age, gender, and a clear timeline of symptoms.</li>
+            <li>Include any minor details that may assist the system in making a more accurate diagnosis.</li>
+            <li>Review the real-time transcript and the highlighted information for your reference.</li>
+            <li>Click the "Generate Report" button to receive detailed insights on the diagnosis.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <div class="diagnosis-box">
+      <h2>Predicted Diagnosis</h2>
+      <div id="diagnosis-box"></div>
+    </div>
+    <div class="precautions-box">
+      <h2>Precautions & Home Remedies</h2>
+      <div id="precautions-box"></div>
+    </div>
+    <div class="clinic-box">
+      <h2>Nearby Clinics and Hospitals</h2>
+      <div id="clinic-suggestions"></div>
+    </div>
+  </div>
+  <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+  <script>
+    const socket = io();
+    const toggleBtn = document.getElementById('toggle-btn');
+    const reportBtn = document.getElementById('generate-report-btn');
+    const transcriptText = document.getElementById('transcript-text');
+    const diagnosisBox = document.getElementById('diagnosis-box');
+    const precautionsBox = document.getElementById('precautions-box');
+    const clinicBox = document.getElementById('clinic-suggestions');
+    const languageSelect = document.getElementById('language-select');
+    let isRecording = false;
+    let analyzedText = '';
+
+    toggleBtn.addEventListener('click', () => {
+      isRecording = !isRecording;
+      if (isRecording) {
+        toggleBtn.textContent = "🛑 Stop Recording";
+        toggleBtn.classList.remove('mic-off');
+        toggleBtn.classList.add('mic-on');
+        // Get user location using the browser's geolocation API
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition((position) => {
+            let location = {
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude
+            };
+            socket.emit('toggle_transcription', { language: languageSelect.value, location: location });
+          }, (error) => {
+            console.error("Error getting location:", error);
+            socket.emit('toggle_transcription', { language: languageSelect.value });
+          });
+        } else {
+          socket.emit('toggle_transcription', { language: languageSelect.value });
+        }
+      } else {
+        toggleBtn.textContent = "🎤 Start Recording";
+        toggleBtn.classList.remove('mic-on');
+        toggleBtn.classList.add('mic-off');
+        socket.emit('toggle_transcription', { language: languageSelect.value });
+      }
+    });
+
+    socket.on('partial_transcript', data => {
+      transcriptText.innerHTML = analyzedText + data.text;
+    });
+
+    socket.on('formatted_transcript', data => {
+      analyzedText += data.text + "<br>";
+      transcriptText.innerHTML = analyzedText;
+      const diagnosisRegex = /<span\s+style="color:\s*blue;">(.*?)<\/span>/i;
+      const match = diagnosisRegex.exec(data.text);
+      if(match) {
+        diagnosisBox.innerHTML += match[1] + "<br>";
+      }
+      reportBtn.style.display = 'inline-block';
+    });
+
+    socket.on('precautions', data => {
+      precautionsBox.innerHTML = data.text;
+    });
+
+    socket.on('clinic_suggestions', data => {
+      clinicBox.innerHTML = data.text;
+    });
+
+    reportBtn.addEventListener('click', () => {
+      window.location.href = '/report';
+    });
+  </script>
+</body>
+</html>
