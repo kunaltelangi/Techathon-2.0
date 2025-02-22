@@ -3,115 +3,178 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mateee Med-AI Report</title>
+  <title>Jeevan Care - Patient Report</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
   <style>
-    /* Styling for the sections in the report */
+    body {
+      font-family: Inter, sans-serif;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 0;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: white;
+      color: #005792;
+      padding: 15px;
+      border-bottom: 3px solid #f4a261;
+    }
+    .header img { 
+      height: 100px; 
+      margin-right: 3px;
+    }
+    .header-text h1 {
+      margin: 0;
+      font-size: 30px;
+      text-align: center;
+    }
+    .container {
+      width: 80%;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      margin-top: 20px;
+      border: 2px solid #005792;
+    }
+    .main-title {
+      text-align: center;
+      font-size: 32px;
+      font-weight: bold;
+      color: #005792;
+      margin: 20px 0;
+    }
     .section {
       margin: 20px 0;
     }
     .section h2 {
-      border-bottom: 2px solid #eee;
+      border-bottom: 2px solid #005792;
       padding-bottom: 10px;
+      color: #005792;
     }
-    .section ul {
-      list-style-type: disc;
-      padding-left: 20px;
-    }
-    /* Dashboard charts styling */
     .dashboard {
       margin-top: 40px;
       padding-top: 20px;
-      border-top: 2px solid #eee;
+      border-top: 2px solid #005792;
     }
     .chart-container {
-      width: 100%;
-      margin-bottom: 30px;
+      width: 80%;
+      margin: auto;
+      margin-bottom: 20px;
+      max-height: 250px;
+    }
+    .date-time {
+      text-align: right;
+      font-size: 16px;
+      color: #333;
+    }
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .download-btn, .share-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      text-decoration: none;
+      color: white;
+      background-color: #005792;
+      padding: 6px 8px;
+      border-radius: 5px;
+      font-weight: bold;
+      width: fit-content;
+      font-size: 12px;
+      cursor: pointer;
+      border: none;
+    }
+    .download-btn img, .share-btn img {
+      width: 14px;
+      height: 14px;
     }
   </style>
   <!-- Load Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Load html2pdf.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+  <script>
+    // Update date and time in the report
+    function updateDateTime() {
+      const now = new Date();
+      document.getElementById('date-time').innerText = now.toLocaleString();
+    }
+    setInterval(updateDateTime, 1000);
+    window.onload = updateDateTime;
+  </script>
 </head>
 <body>
   <div class="header">
-    <h1>Mateee Med-AI Report</h1>
+    <img src="{{ url_for('static', filename='images/logo_main.png') }}" alt="Jeevan Care Logo" />
+    <div class="header-text">
+      <h1>Jeevan Care</h1>
+    </div>
   </div>
-  <div class="container">
+  <!-- "reportContainer" is used for html2pdf conversion -->
+  <div class="container" id="reportContainer">
+    <div class="main-title">Patient Report</div>
+    <div class="date-time" id="date-time"></div>
     <div class="controls">
-      <a href="{{ url_for('download_pdf') }}" class="download-btn">Download PDF</a>
+      <!-- Download PDF Button -->
+      <button id="downloadPDFBtn" class="download-btn">
+        <img src="{{ url_for('static', filename='images/pdf.png') }}" alt="PDF Icon" />Download PDF
+      </button>
+      <!-- Share via Email Button -->
+      <button id="shareEmailBtn" class="share-btn">
+        <img src="{{ url_for('static', filename='images/pdf.png') }}" alt="PDF Icon" />Share via Email
+      </button>
     </div>
     {% if phi %}
       <section class="section">
         <h2>Protected Health Information (PHI)</h2>
-        <ul>
-          {% for item in phi %}
-            <li>{{ item }}</li>
-          {% endfor %}
-        </ul>
+        <ul>{% for item in phi %}<li>{{ item }}</li>{% endfor %}</ul>
       </section>
     {% endif %}
     {% if medical_history %}
       <section class="section">
         <h2>Medical History</h2>
-        <ul>
-          {% for item in medical_history %}
-            <li>{{ item }}</li>
-          {% endfor %}
-        </ul>
+        <ul>{% for item in medical_history %}<li>{{ item }}</li>{% endfor %}</ul>
       </section>
     {% endif %}
     {% if anatomy %}
       <section class="section">
         <h2>Anatomy</h2>
-        <ul>
-          {% for item in anatomy %}
-            <li>{{ item }}</li>
-          {% endfor %}
-        </ul>
+        <ul>{% for item in anatomy %}<li>{{ item }}</li>{% endfor %}</ul>
       </section>
     {% endif %}
     {% if medication %}
       <section class="section">
         <h2>Medication</h2>
-        <ul>
-          {% for item in medication %}
-            <li>{{ item }}</li>
-          {% endfor %}
-        </ul>
+        <ul>{% for item in medication %}<li>{{ item }}</li>{% endfor %}</ul>
       </section>
     {% endif %}
     {% if tests %}
       <section class="section">
         <h2>Tests, Treatments & Procedures</h2>
-        <ul>
-          {% for item in tests %}
-            <li>{{ item }}</li>
-          {% endfor %}
-        </ul>
+        <ul>{% for item in tests %}<li>{{ item }}</li>{% endfor %}</ul>
       </section>
     {% endif %}
     {% if diagnosis %}
       <section class="section">
         <h2>Predicted Diagnosis</h2>
-        <ul>
-          {% for item in diagnosis %}
-            <li>{{ item }}</li>
-          {% endfor %}
-        </ul>
+        <ul>{% for item in diagnosis %}<li>{{ item }}</li>{% endfor %}</ul>
       </section>
     {% endif %}
     {% if severity %}
       <section class="section">
         <h2>Diagnosis Severity</h2>
-        <ul>
-          {% for item in severity %}
-            <li>{{ item }}</li>
-          {% endfor %}
-        </ul>
+        <ul>{% for item in severity %}<li>{{ item }}</li>{% endfor %}</ul>
       </section>
     {% endif %}
-    
-    <!-- Dashboard Charts -->
     <div class="dashboard">
       <h2>Dashboard</h2>
       <div class="chart-container">
@@ -127,12 +190,12 @@
   </div>
   
   <script>
-    // Function to refresh charts by fetching data from /chart_data endpoint
+    // Refresh dashboard charts by fetching data from /chart_data endpoint
     function refreshDashboard() {
       fetch('/chart_data')
         .then(response => response.json())
         .then(data => {
-          // Update Symptom Frequency Chart
+          // Symptom Frequency Chart
           const symptomCanvas = document.getElementById('symptomFrequencyChart');
           const symptomLabels = Object.keys(data.symptom_counts);
           const symptomValues = Object.values(data.symptom_counts);
@@ -150,8 +213,8 @@
             },
             options: { scales: { y: { beginAtZero: true } } }
           });
-  
-          // Update Severity Trends Chart
+          
+          // Severity Trends Chart
           const severityCanvas = document.getElementById('severityTrendsChart');
           const severityData = data.severity_trends;
           const severityLabels = severityData.map(item => item.time);
@@ -190,8 +253,8 @@
               }
             }
           });
-  
-          // Update Symptom Timeline Chart
+          
+          // Symptom Timeline Chart
           const timelineCanvas = document.getElementById('symptomTimelineChart');
           const timelineData = data.symptom_timeline;
           if (timelineData && timelineData.length > 0) {
@@ -224,7 +287,10 @@
                         for (const key in symptomMap) { if (symptomMap[key] === value) return key; }
                         return value;
                       },
-                      stepSize: 1, beginAtZero: true, min: 0, max: uniqueSymptoms.length + 1
+                      stepSize: 1, 
+                      beginAtZero: true, 
+                      min: 0, 
+                      max: uniqueSymptoms.length + 1
                     }
                   }
                 },
@@ -237,9 +303,53 @@
         })
         .catch(error => console.error('Error fetching chart data:', error));
     }
+    // Initialize charts when window loads
+    window.onload = function() {
+      updateDateTime();
+      refreshDashboard();
+    }
     
-    // Refresh dashboard 
-    window.onload = refreshDashboard;
+    // Download PDF functionality using html2pdf.js
+    document.getElementById("downloadPDFBtn").addEventListener("click", function () {
+      const element = document.getElementById("reportContainer");
+      const opt = {
+        margin:       0.5,
+        filename:     'Jeevan_Care_Report.pdf',
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2 },
+        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+      };
+      html2pdf().set(opt).from(element).save();
+    });
+    
+    // Share via Email functionality: Convert to PDF, trigger download, then open mail client
+    document.getElementById("shareEmailBtn").addEventListener("click", function () {
+      const element = document.getElementById("reportContainer");
+      const opt = {
+        margin:       0.5,
+        filename:     'Jeevan_Care_Report.pdf',
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2 },
+        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+      };
+      html2pdf().set(opt).from(element).outputPdf('blob').then(blob => {
+        const fileURL = URL.createObjectURL(blob);
+        // Optionally trigger an automatic download
+        const link = document.createElement("a");
+        link.href = fileURL;
+        link.download = "Jeevan_Care_Report.pdf";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+  
+        // After a short delay, open the default mail client with pre-filled details
+        setTimeout(() => {
+          const emailSubject = encodeURIComponent("Jeevan Care Report");
+          const emailBody = encodeURIComponent("The PDF report has been downloaded. Please attach it to this email before sending.\n\nBest regards,\nJeevan Care Team");
+          window.location.href = `mailto:?subject=${emailSubject}&body=${emailBody}`;
+        }, 1000);
+      });
+    });
   </script>
 </body>
 </html>

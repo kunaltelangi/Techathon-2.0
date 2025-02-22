@@ -204,7 +204,7 @@ Do not include any extra commentary.'''
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('trans.html')
 
 @app.route('/chart_data')
 def chart_data():
@@ -278,5 +278,5 @@ def handle_toggle_transcription(data):
             print("Starting transcriber session with language:", language)
             threading.Thread(target=transcribe_real_time, args=(language,)).start()
 
-#if __name__ == '__main__':
-#    socketio.run(app, debug=True)
+if __name__ == '__main__':
+    socketio.run(app, debug=True)
