@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Medical Transcription Analysis</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  <style>
+    /* Styling for the diagnosis box below the transcript */
+    .diagnosis-box {
+      background-color: #e8f4ff;
+      border: 1px solid #007BFF;
+      border-radius: 8px;
+      padding: 15px;
+      margin: 20px 0;
+      width: 100%;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    }
+    .diagnosis-box h2 {
+      margin-top: 0;
+      color: #007BFF;
+    }
+    /* Styling for the precautions box */
+    .precautions-box {
+      background-color: #fff3e0;
+      border: 1px solid #FF9800;
+      border-radius: 8px;
+      padding: 15px;
+      margin: 20px 0;
+      width: 100%;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    }
+    .precautions-box h2 {
+      margin-top: 0;
+      color: #FF9800;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Jeevan Care</h1>
+  </div>
+  <div class="container">
+    <div class="controls">
+      <button id="toggle-btn" class="mic-off">🎤 Start Recording</button>
+      <button id="generate-report-btn" class="report-button" style="display: none;">📄 Generate Report</button>
+    </div>
+    <div class="transcript-container">
+      <div class="transcript">
+        <h2>Real-Time Transcript</h2>
+        <pre id="transcript-text"></pre>
+      </div>
+      <div class="legend">
+        <h3>Highlight on transcript</h3>
+        <p><span class="anatomy">Anatomy</span></p>
+        <p><span class="medical-history">Medical History</span></p>
+        <p><span class="medication">Medication</span></p>
+        <p><span class="phi">Protected Health Information</span></p>
+        <p><span class="tests">Tests & Treatments</span></p>
+        <p><span style="color: blue;">Predicted Diagnosis</span></p>
+      </div>
+    </div>
+    <div class="diagnosis-box" style="width: 70%;">
+      <h2>Predicted Diagnosis</h2>
+      <div id="diagnosis-box"></div>
+    </div>
+    <div class="precautions-box" style="width: 70%;">
+      <h2>Precautions & Home Remedies</h2>
+      <div id="precautions-box"></div>
+    </div>
+  </div>
+  <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+  <script>
+    const socket = io();
+    const toggleBtn = document.getElementById('toggle-btn');
+    const reportBtn = document.getElementById('generate-report-btn');
+    const transcriptText = document.getElementById('transcript-text');
+    const diagnosisBox = document.getElementById('diagnosis-box');
+    const precautionsBox = document.getElementById('precautions-box');
+    let isRecording = false;
+    let analyzedText = '';
+
+    toggleBtn.addEventListener('click', () => {
+      isRecording = !isRecording;
+      if (isRecording) {
+        toggleBtn.textContent = "🛑 Stop Recording";
+        toggleBtn.classList.remove('mic-off');
+        toggleBtn.classList.add('mic-on');
+      } else {
+        toggleBtn.textContent = "🎤 Start Recording";
+        toggleBtn.classList.remove('mic-on');
+        toggleBtn.classList.add('mic-off');
+      }
+      socket.emit('toggle_transcription');
+    });
+
+    socket.on('partial_transcript', data => {
+      transcriptText.innerHTML = analyzedText + data.text;
+    });
+
+    socket.on('formatted_transcript', data => {
+      analyzedText += data.text + "<br>";
+      transcriptText.innerHTML = analyzedText;
+      const diagnosisRegex = /<span style="color:\s*blue;">(.*?)<\/span>/g;
+      let match;
+      while ((match = diagnosisRegex.exec(data.text)) !== null) {
+        diagnosisBox.innerHTML += match[1] + "<br>";
+      }
+      reportBtn.style.display = 'inline-block';
+    });
+
+    socket.on('precautions', data => {
+      precautionsBox.innerHTML = data.text;
+    });
+
+    reportBtn.addEventListener('click', () => {
+      window.location.href = '/report';
+    });
+  </script>
+</body>
+</html>
