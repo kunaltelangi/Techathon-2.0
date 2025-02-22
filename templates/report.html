@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mateee Med-AI Report</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  <style>
+    /* Styling for the sections in the report */
+    .section {
+      margin: 20px 0;
+    }
+    .section h2 {
+      border-bottom: 2px solid #eee;
+      padding-bottom: 10px;
+    }
+    .section ul {
+      list-style-type: disc;
+      padding-left: 20px;
+    }
+    /* Dashboard charts styling */
+    .dashboard {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 2px solid #eee;
+    }
+    .chart-container {
+      width: 100%;
+      margin-bottom: 30px;
+    }
+  </style>
+  <!-- Load Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="header">
+    <h1>Mateee Med-AI Report</h1>
+  </div>
+  <div class="container">
+    <div class="controls">
+      <a href="{{ url_for('download_pdf') }}" class="download-btn">Download PDF</a>
+    </div>
+    {% if phi %}
+      <section class="section">
+        <h2>Protected Health Information (PHI)</h2>
+        <ul>
+          {% for item in phi %}
+            <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </section>
+    {% endif %}
+    {% if medical_history %}
+      <section class="section">
+        <h2>Medical History</h2>
+        <ul>
+          {% for item in medical_history %}
+            <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </section>
+    {% endif %}
+    {% if anatomy %}
+      <section class="section">
+        <h2>Anatomy</h2>
+        <ul>
+          {% for item in anatomy %}
+            <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </section>
+    {% endif %}
+    {% if medication %}
+      <section class="section">
+        <h2>Medication</h2>
+        <ul>
+          {% for item in medication %}
+            <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </section>
+    {% endif %}
+    {% if tests %}
+      <section class="section">
+        <h2>Tests, Treatments & Procedures</h2>
+        <ul>
+          {% for item in tests %}
+            <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </section>
+    {% endif %}
+    {% if diagnosis %}
+      <section class="section">
+        <h2>Predicted Diagnosis</h2>
+        <ul>
+          {% for item in diagnosis %}
+            <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </section>
+    {% endif %}
+    {% if severity %}
+      <section class="section">
+        <h2>Diagnosis Severity</h2>
+        <ul>
+          {% for item in severity %}
+            <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </section>
+    {% endif %}
+    
+    <!-- Dashboard Charts -->
+    <div class="dashboard">
+      <h2>Dashboard</h2>
+      <div class="chart-container">
+        <canvas id="symptomFrequencyChart"></canvas>
+      </div>
+      <div class="chart-container">
+        <canvas id="severityTrendsChart"></canvas>
+      </div>
+      <div class="chart-container" id="timelineContainer">
+        <canvas id="symptomTimelineChart"></canvas>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Function to refresh charts by fetching data from /chart_data endpoint
+    function refreshDashboard() {
+      fetch('/chart_data')
+        .then(response => response.json())
+        .then(data => {
+          // Update Symptom Frequency Chart
+          const symptomCanvas = document.getElementById('symptomFrequencyChart');
+          const symptomLabels = Object.keys(data.symptom_counts);
+          const symptomValues = Object.values(data.symptom_counts);
+          new Chart(symptomCanvas, {
+            type: 'bar',
+            data: {
+              labels: symptomLabels,
+              datasets: [{
+                label: 'Symptom Frequency',
+                data: symptomValues,
+                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+              }]
+            },
+            options: { scales: { y: { beginAtZero: true } } }
+          });
+  
+          // Update Severity Trends Chart
+          const severityCanvas = document.getElementById('severityTrendsChart');
+          const severityData = data.severity_trends;
+          const severityLabels = severityData.map(item => item.time);
+          const severityNumeric = severityData.map(item => {
+            if(item.severity === 'HIGH') return 3;
+            else if(item.severity === 'MODERATE') return 2;
+            else return 1;
+          });
+          new Chart(severityCanvas, {
+            type: 'line',
+            data: {
+              labels: severityLabels,
+              datasets: [{
+                label: 'Severity Trends (1=LOW, 3=HIGH)',
+                data: severityNumeric,
+                fill: false,
+                borderColor: 'rgba(255, 99, 132, 1)',
+                tension: 0.1
+              }]
+            },
+            options: { 
+              scales: { 
+                y: { 
+                  ticks: { 
+                    callback: function(value) {
+                      if(value === 1) return 'LOW';
+                      if(value === 2) return 'MODERATE';
+                      if(value === 3) return 'HIGH';
+                      return value;
+                    },
+                    stepSize: 1, 
+                    beginAtZero: true, 
+                    max: 3 
+                  }
+                } 
+              }
+            }
+          });
+  
+          // Update Symptom Timeline Chart
+          const timelineCanvas = document.getElementById('symptomTimelineChart');
+          const timelineData = data.symptom_timeline;
+          if (timelineData && timelineData.length > 0) {
+            const timelineSymptoms = timelineData.map(item => item.symptom);
+            const uniqueSymptoms = [...new Set(timelineSymptoms)];
+            const symptomMap = {};
+            uniqueSymptoms.forEach((symptom, index) => { symptomMap[symptom] = index + 1; });
+            const scatterData = timelineData.map(item => ({
+              x: item.time,
+              y: symptomMap[item.symptom],
+              label: item.symptom
+            }));
+            new Chart(timelineCanvas, {
+              type: 'scatter',
+              data: { 
+                datasets: [{
+                  label: 'Critical Symptom Timeline',
+                  data: scatterData,
+                  backgroundColor: 'rgba(54, 162, 235, 0.6)'
+                }]
+              },
+              options: {
+                parsing: false,
+                scales: {
+                  x: { title: { display: true, text: 'Time' }, ticks: { autoSkip: false } },
+                  y: { 
+                    title: { display: true, text: 'Symptom' },
+                    ticks: { 
+                      callback: function(value) {
+                        for (const key in symptomMap) { if (symptomMap[key] === value) return key; }
+                        return value;
+                      },
+                      stepSize: 1, beginAtZero: true, min: 0, max: uniqueSymptoms.length + 1
+                    }
+                  }
+                },
+                plugins: { tooltip: { callbacks: { label: function(context) { return context.raw.label; } } } }
+              }
+            });
+          } else {
+            document.getElementById('timelineContainer').style.display = 'none';
+          }
+        })
+        .catch(error => console.error('Error fetching chart data:', error));
+    }
+    
+    // Refresh dashboard 
+    window.onload = refreshDashboard;
+  </script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+assemblyai_api_key = "1c5f6fbcafaf49a38459b67ee4c5f29a"
