@@ -204,6 +204,10 @@ Do not include any extra commentary.'''
 
 @app.route('/')
 def index():
+    return render_template('index.html')
+
+@app.route('/trans.html')
+def trans():
     return render_template('trans.html')
 
 @app.route('/chart_data')
