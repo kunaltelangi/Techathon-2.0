@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jevaan Care - Your AI Health Assistant</title>
+    <title>HealthAI - Your AI Health Assistant</title>
     <link rel="stylesheet" href="./static/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </head>
 <body>
     <header>
@@ -25,7 +26,7 @@
             <h1>AI-Powered Health Assistant</h1>
             <p class="lead">Get instant health insights and personalized recommendations powered by advanced AI technology.</p>
             <div class="cta-buttons">
-                <button class="btn btn-primary" id="startTrialButton">Start Free Trial</button>
+                <button class="btn btn-primary" onclick="startFreeTrial()">Start free trial</button>
                 <button class="btn btn-outline">Watch Demo</button>
             </div>
         </div>
@@ -56,7 +57,7 @@
 
     <section class="pricing" id="pricing">
         <div class="container">
-            <h2>Choose Your Plan</h2>
+            
             <div class="pricing-grid">
                 <div class="pricing-card">
                     <h3>Free</h3>
@@ -79,7 +80,7 @@
                         <li>Unlimited AI Insights</li>
                         
                     </ul>
-                    <button class="btn btn-primary">Choose Plan</button>
+                    <button class="btn btn-primary" id="pay-btn">Choose Plan</button>
                 </div>
                 <div class="pricing-card">
                     <h3>Enterprise</h3>
@@ -101,7 +102,7 @@
             <div class="footer-grid">
                 <div class="footer-col">
                     <h4>Jeevan Care</h4>
-                    <p>Your trusted AI-powered health assistant, providing personalized insights for a healthier tomorrow.</p>
+                    <p>Your trusted health assistant providing personalized insights for a healthier tomorrow.</p>
                 </div>
                 <div class="footer-col">
                     <h5>Quick Links</h5>
@@ -135,13 +136,65 @@
             <p class="copyright">© 2025 Jeevan Care. All rights reserved.</p>
         </div>
     </footer>
-<script>
-    const startTrialButton = document.getElementById('startTrialButton');
+    <script>
+        function startFreeTrial() {
+            document.body.classList.add('fade-out');
+            setTimeout(function() {
+                window.location.href = 'trans.html';
+            }, 500); // Adjust the timeout duration as needed
+        }
 
-    startTrialButton.addEventListener('click', () => {
-    window.location.href = 'trans.html';
-    });
-</script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.body.classList.add('fade-in');
+        });
+
+        document.getElementById("pay-btn").addEventListener("click", function () {
+            var options = {
+                "key": "YOUR_RAZORPAY_KEY", // Replace with your actual Razorpay API key
+                "amount": 49900, // 499 INR (amount is in paise)
+                "currency": "INR",
+                "name": "Jeevan Care",
+                "description": "Pro Plan Subscription",
+                "image": "./static/images/logomain.png", // Add your logo URL
+                "handler": function (response) {
+                    alert("Payment Successful! Payment ID: " + response.razorpay_payment_id);
+                    // You can also redirect the user to a confirmation page
+                },
+                "prefill": {
+                    "name": "John Doe",
+                    "email": "johndoe@example.com",
+                    "contact": "9999999999"
+                },
+                "theme": {
+                    "color": "#008CBA"
+                }
+            };
+        
+            var rzp = new Razorpay(options);
+            rzp.open();
+        });
+    </script>
+    <style>
+        .fade-in {
+            opacity: 0;
+            animation: fadeIn 0.5s forwards;
+        }
+
+        .fade-out {
+            animation: fadeOut 0.5s forwards;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+            }
+        }
+    </style>
 </body>
 </html>
-
