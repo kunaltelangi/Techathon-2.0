@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Login Page</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='log.css') }}">
+</head>
+<body>
+<div class="login-container">
+    <div class="form-container">
+        <h2>Login</h2>
+        <form action="{{ url_for('login') }}" method="post" onsubmit="return validateForm()">
+            <label for="uname"><b>Username</b></label>
+            <input type="text" placeholder="Enter Username" name="uname" id="uname" required>
+
+            <label for="psw"><b>Password</b></label>
+            <input type="password" placeholder="Enter Password" name="psw" id="psw" required>
+
+            <button type="submit">Login</button>
+
+            <div class="remember-me">
+                <center><input type="checkbox" checked="checked" name="remember">Remember me</center>
+            </div>
+
+            <a href="#" class="forgot-password">Forgot password?</a>
+
+            <div class="signup-container">
+                <h4>Don't have an account?
+                    <a href="{{ url_for('register') }}">Sign Up</a>
+                </h4>
+            </div>
+        </form>
+    </div>
+
+    <div class="image-container"></div> <!-- This will hold the background image -->
+</div>
+
+<script>
+    function validateForm() {
+        var uname = document.getElementById('uname').value;
+        var psw = document.getElementById('psw').value;
+        if (uname == "" || psw == "") {
+            alert("Username and Password must be filled out");
+            return false;
+        }
+        return true;
+    }
+</script>
+</body>
+</html>

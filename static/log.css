@@ -1,0 +1,110 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+  }
+  
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: linear-gradient(to right, #0066cc, #3399ff);
+  }
+  
+  .login-container {
+    display: flex;
+    width: 800px;
+    height: 500px;
+    background: rgba(255, 255, 255, 0.3); /* Slight transparency */
+    backdrop-filter: blur(10px);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+  
+  .image-container {
+    flex: 1;
+    background: url('doc2.jpg') no-repeat center;
+    background-size: cover;
+    border-right: 2px solid rgba(255, 255, 255, 0.4); /* Soft divider */
+  }
+  
+  .form-container {
+    flex: 1;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.5); /* Increased transparency for better blending */
+  }
+  
+  h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #333;
+  }
+  
+  input {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+  
+  button {
+    width: 100%;
+    padding: 10px;
+    background-color: #4CAF50;
+    border: none;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  
+  button:hover {
+    background-color: #45a049;
+  }
+  
+  .remember-me {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 10px 0;
+  }
+  
+  .forgot-password {
+    text-align: right;
+    display: block;
+    margin: 10px 0;
+    color: #007bff;
+    text-decoration: none;
+  }
+  
+  .signup-container {
+    text-align: center;
+    margin-top: 15px;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .login-container {
+        flex-direction: column;
+        width: 90%;
+        height: auto;
+    }
+  
+    .image-container {
+        height: 200px; /* Adjust height when stacked */
+        border-right: none;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.4);
+    }
+  
+    .form-container {
+        padding: 30px;
+    }
+  }
+   

@@ -1,0 +1,98 @@
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(to right, #0066cc, #3399ff);  /* Blue gradient background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
+.modal-content {
+    width: 320px;  /* Adjusted width for a better look */
+    background-color: rgba(255, 255, 255, 0.8); /* White background with transparency */
+    padding: 25px;
+    border-radius: 8px; /* Rounded corners for the box */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* Light shadow for depth */
+    
+    backdrop-filter: blur(10px); /* Optional: adds a blur effect behind the form */
+}
+
+.log h2 {
+    font-size: 22px; /* Slightly larger title for readability */
+    margin-bottom: 20px;
+    color: #333; /* Dark color for the title */
+}
+
+.imgcontainer {
+    margin-bottom: 15px;
+}
+
+.avatar {
+    width: 50px; /* Avatar size */
+    height: 50px;
+    border-radius: 50%;
+}
+
+.container {
+    margin: 10px 0;
+}
+
+label {
+    font-size: 14px; /* Smaller font for labels */
+    margin-bottom: 5px;
+    display: block;
+    color: #333; /* Dark color for labels */
+}
+
+input[type="text"], input[type="email"], input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 14px;
+    box-sizing: border-box; /* Ensures padding doesn't affect width */
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 14px; 
+    cursor: pointer;
+    margin-bottom: 10px;  /* Adding space between buttons */
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+.cancelbtn {
+    background-color: #f44336;
+    border: none;
+    color: white;
+    padding: 8px 16px;
+    text-align: center;
+    text-decoration: none;
+    font-size: 14px;
+    cursor: pointer;
+    margin-top: 10px; /* Adds spacing */
+}
+
+.signup-container {
+    margin-top: 15px;
+    font-size: 14px;
+}
+
+.signup-container a {
+    color: #007BFF;
+}
+
+.signup-container a:hover {
+    text-decoration: underline;
+}

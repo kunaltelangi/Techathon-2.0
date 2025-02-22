@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='regis.css') }}">
+    <title>Register Page</title>
+</head>
+<body>
+
+<form class="modal-content animate" action="{{ url_for('register') }}" method="post" onsubmit="return validateForm()">
+    <div class="log">
+        <center><h2>Register</h2></center>
+    </div>
+
+    <div class="container">
+        <label for="fname"><b>Full Name</b></label>
+        <input type="text" placeholder="Enter Full Name" name="fname" id="fname" required>
+
+        <label for="email"><b>Email</b></label>
+        <input type="email" placeholder="Enter Email" name="email" id="email" required>
+
+        <label for="uname"><b>Username</b></label>
+        <input type="text" placeholder="Enter Username" name="uname" id="uname" required>
+
+        <label for="psw"><b>Password</b></label>
+        <input type="password" placeholder="Enter Password" name="psw" id="psw" required>
+
+        <label for="cpsw"><b>Confirm Password</b></label>
+        <input type="password" placeholder="Confirm Password" name="cpsw" id="cpsw" required> 
+
+        <br> 
+        <button type="submit">Register</button>
+    </div>
+
+    <div class="signup-container">
+        <center><h4>Already have an account? <a href="{{ url_for('login') }}">Log In</a></h4></center>
+    </div>
+</form>
+
+<script>
+    function validateForm() {
+        var fname = document.getElementById('fname').value;
+        var email = document.getElementById('email').value;
+        var uname = document.getElementById('uname').value;
+        var psw = document.getElementById('psw').value;
+        var cpsw = document.getElementById('cpsw').value;
+
+        if (fname == "" || email == "" || uname == "" || psw == "" || cpsw == "") {
+            alert("All fields must be filled out");
+            return false;
+        }
+
+        if (psw !== cpsw) {
+            alert("Passwords do not match");
+            return false;
+        }
+
+        return true;
+    }
+</script>
+
+</body>
+</html>
