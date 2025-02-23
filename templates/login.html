@@ -2,50 +2,41 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Login Page</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='log.css') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Jeevan Care</title>
+    <link rel="stylesheet" href="./static/log.css">
 </head>
 <body>
-<div class="login-container">
-    <div class="form-container">
-        <h2>Login</h2>
-        <form action="{{ url_for('login') }}" method="post" onsubmit="return validateForm()">
-            <label for="uname"><b>Username</b></label>
-            <input type="text" placeholder="Enter Username" name="uname" id="uname" required>
-
-            <label for="psw"><b>Password</b></label>
-            <input type="password" placeholder="Enter Password" name="psw" id="psw" required>
-
-            <button type="submit">Login</button>
-
-            <div class="remember-me">
-                <center><input type="checkbox" checked="checked" name="remember">Remember me</center>
+    <div class="center">
+        <h1>Login</h1>
+        <form id="loginForm">
+            <div class="txt_field">
+                <input type="text" id="username" name="username" required>
+                <span></span>
+                <label for="username">Username</label>
             </div>
-
-            <a href="#" class="forgot-password">Forgot password?</a>
-
-            <div class="signup-container">
-                <h4>Don't have an account?
-                    <a href="{{ url_for('register') }}">Sign Up</a>
-                </h4>
+            <div class="txt_field">
+                <input type="password" id="password" name="password" required>
+                <span></span>
+                <label for="password">Password</label>
+            </div>
+            <div class="pass">Forgot Password?</div>
+            <input type="submit" value="Login">
+            <div class="signup_link">
+                Not a member? <a href="#">Signup</a>
             </div>
         </form>
     </div>
 
-    <div class="image-container"></div> <!-- This will hold the background image -->
-</div>
+    <script>
+        const loginForm = document.getElementById('loginForm');
 
-<script>
-    function validateForm() {
-        var uname = document.getElementById('uname').value;
-        var psw = document.getElementById('psw').value;
-        if (uname == "" || psw == "") {
-            alert("Username and Password must be filled out");
-            return false;
-        }
-        return true;
-    }
-</script>
+        loginForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            // Perform login validation here
+            // For demonstration, we assume login is always successful
+            window.location.href = 'trans.html';
+        });
+    </script>
 </body>
 </html>

@@ -210,6 +210,10 @@ def index():
 def trans():
     return render_template('trans.html')
 
+@app.route('/login.html')
+def login():
+    return render_template('login.html')
+
 @app.route('/chart_data')
 def chart_data():
     global symptom_counts, severity_trends, symptom_timeline

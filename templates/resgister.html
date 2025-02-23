@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <title>Animated Signup Form | Hospital Portal</title>
+    <link rel="stylesheet" href="../static/log.css" />
+  </head>
+  <body>
+    <div class="center">
+      <h1>Signup</h1>
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <ul>
+            {% for message in messages %}
+              <li style="color:green;">{{ message }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      {% endwith %}
+      <form method="post" action="{{ url_for('signup') }}">
+        <div class="txt_field">
+          <input type="text" name="fullname" required />
+          <span></span>
+          <label>Full Name</label>
+        </div>
+        <div class="txt_field">
+          <input type="email" name="email" required />
+          <span></span>
+          <label>Email</label>
+        </div>
+        <div class="txt_field">
+          <input type="password" name="password" required />
+          <span></span>
+          <label>Password</label>
+        </div>
+        <input type="submit" value="Signup" />
+        <div class="signup_link">Already a member? <a href="{{ url_for('login') }}">Login</a></div>
+      </form>
+    </div>
+  </body>
+</html>
