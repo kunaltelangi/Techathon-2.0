@@ -1,6 +1,5 @@
 import re
 import threading
-import asyncio
 from datetime import datetime
 import json
 from flask import Flask, render_template, make_response
@@ -16,17 +15,17 @@ aai.settings.api_key = assemblyai_api_key
 transcriber = None
 session_id = None
 transcriber_lock = threading.Lock()
+# On re-analysis, previous analysis is replaced.
 report_transcript = ""
 current_language = "english"  # default language for realtime transcription
 
 # Global variables for chart data
-symptom_counts = {}      # e.g., {"fever": 3, "cough": 2, ...}
-severity_trends = []     # e.g., [{"time": "HH:MM:SS", "severity": "HIGH"}, ...]
-symptom_timeline = []    # e.g., [{"time": "HH:MM:SS", "symptom": "chest pain"}, ...]
+symptom_counts = {}      
+severity_trends = []     
+symptom_timeline = []    
 
-user_location = None  # Global variable to store the user's location (latitude and longitude)
+user_location = None  # Store user's location
 
-# Base prompt for formatting (always in English)
 base_prompt = '''You are a medical transcript analyzer. Your task is to return the exact transcript with the following modifications:
 1. Wrap any Protected Health Information (PHI) (such as names, ages, nationalities, gender identities, organizations) in <span style="color: red;"> ... </span>.
 2. Highlight any Medical History (illnesses, symptoms, conditions) using <span style="background-color: lightgreen;"> ... </span>.
@@ -34,9 +33,9 @@ base_prompt = '''You are a medical transcript analyzer. Your task is to return t
 4. Wrap any Medication names in <span style="background-color: yellow;"> ... </span>.
 5. Wrap any Tests, Treatments, & Procedures in <span style="color: darkblue;"> ... </span>.
 6. Based solely on the transcript, predict the most likely diagnosis and output it on its own separate line, enclosed in <span style="color: blue;"> and </span> with no extra text.
+If there is insufficient information to predict a diagnosis or apply modifications, simply return the transcript verbatim.
 Return only the formatted transcript without any additional commentary.'''
 
-# Prompt for precautions/home remedies
 precautions_prompt = '''You are a medical advisor. Based on the predicted diagnosis provided below, suggest practical precautions (including recommended food items and home remedies).
 Format your answer in HTML as follows:
 <div class="precautions">
@@ -47,7 +46,6 @@ Format your answer in HTML as follows:
 </div>
 Do not include extra text.'''
 
-# Prompt for severity evaluation
 severity_prompt = '''You are a medical advisor. Based on the predicted diagnosis provided below, evaluate its severity and provide a short recommendation.
 Format your answer in HTML as follows:
 <span class="severity">Severity: HIGH - Please consult a doctor immediately.</span>
@@ -65,9 +63,10 @@ def on_open(session_opened: aai.RealtimeSessionOpened):
 def on_data(transcript: aai.RealtimeTranscript):
     if not transcript.text:
         return
+    # For final transcripts, trigger analysis.
     if isinstance(transcript, aai.RealtimeFinalTranscript):
         socketio.emit('transcript', {'text': transcript.text})
-        asyncio.run(analyze_transcript(transcript.text))
+        analyze_transcript(transcript.text, reanalysis=False)
     else:
         socketio.emit('partial_transcript', {'text': transcript.text})
 
@@ -82,7 +81,6 @@ def on_close():
 def transcribe_real_time(language):
     global transcriber, current_language
     current_language = language.lower() if language else "english"
-    # RealtimeTranscriber does not support a language parameter; we simply store the choice.
     transcriber = aai.RealtimeTranscriber(
         sample_rate=16_000,
         on_data=on_data,
@@ -94,10 +92,10 @@ def transcribe_real_time(language):
     microphone_stream = aai.extras.MicrophoneStream(sample_rate=16_000)
     transcriber.stream(microphone_stream)
 
-async def analyze_transcript(transcript):
+def analyze_transcript(transcript, reanalysis=False):
     global report_transcript, symptom_counts, severity_trends, symptom_timeline, current_language
 
-    # --- Extract graph data using AI ---
+    # --- Extract structured graph data ---
     graph_data_prompt = f'''You are an assistant that extracts structured data from a medical transcript.
 Given the following transcript:
 {transcript}
@@ -119,29 +117,28 @@ Return only valid JSON with no additional commentary.'''
         print("Graph data extracted:", data)
     except Exception as e:
         print("Error parsing graph data from AI:", e)
-        if current_language == "hindi":
-            keywords = ["bukhaar", "khansi", "dard", "matli", "ulati", "chakkar", "sar dard"]
-        else:
-            keywords = ["fever", "cough", "pain", "nausea", "dizziness", "headache"]
+        keywords = ["fever", "cough", "pain", "nausea", "dizziness", "headache"]
         transcript_lower = transcript.lower()
         for keyword in keywords:
             count = transcript_lower.count(keyword)
             if count > 0:
                 symptom_counts[keyword] = symptom_counts.get(keyword, 0) + count
 
-    # --- Use the base prompt (always in English) for report generation ---
-    final_prompt = base_prompt
+    # --- Generate formatted transcript ---
     result = aai.Lemur().task(
-        final_prompt,
+        base_prompt,
         input_text=transcript,
         final_model=aai.LemurModel.claude3_5_sonnet
     )
-    formatted = result.response
+    formatted = result.response.strip()
     print("Formatted transcript:", formatted)
-    report_transcript += formatted + "<br>"
+    if reanalysis:
+        report_transcript = formatted + "<br>"
+    else:
+        report_transcript += formatted + "<br>"
     socketio.emit('formatted_transcript', {'text': formatted})
     
-    # --- Extract predicted diagnosis (blue text) ---
+    # --- Extract diagnosis from formatted transcript ---
     diagnosis_matches = re.findall(r'<span\s+style="color:\s*blue;">(.*?)<\/span>', formatted, re.IGNORECASE)
     if diagnosis_matches:
         predicted_diagnosis = diagnosis_matches[0]
@@ -152,7 +149,7 @@ Return only valid JSON with no additional commentary.'''
             input_text=predicted_diagnosis,
             final_model=aai.LemurModel.claude3_5_sonnet
         )
-        precautions_html = precautions_result.response
+        precautions_html = precautions_result.response.strip()
         print("Precautions:", precautions_html)
         socketio.emit('precautions', {'text': precautions_html})
         report_transcript += precautions_html + "<br>"
@@ -162,7 +159,7 @@ Return only valid JSON with no additional commentary.'''
             input_text=predicted_diagnosis,
             final_model=aai.LemurModel.claude3_5_sonnet
         )
-        severity_html = severity_result.response
+        severity_html = severity_result.response.strip()
         print("Severity:", severity_html)
         socketio.emit('severity', {'text': severity_html})
         report_transcript += severity_html + "<br>"
@@ -175,7 +172,7 @@ Return only valid JSON with no additional commentary.'''
                 "severity": severity_level
             })
         
-        # --- New: Get nearby clinic/hospital suggestions with directions ---
+        # --- Generate clinic/hospital suggestions ---
         if user_location:
             loc_str = f"latitude {user_location['latitude']}, longitude {user_location['longitude']}"
         else:
@@ -189,7 +186,6 @@ For each suggestion, include:
 - The Contact Information
 - A "Get Directions" button that is an anchor tag (<a>) opening Google Maps in a new tab.
 Format the "Get Directions" link so that the href is: "https://www.google.com/maps/search/?api=1&query=CLINIC_ADDRESS"
-(where CLINIC_ADDRESS is the URL-encoded address).
 Do not include any extra commentary.'''
         
         clinic_result = aai.Lemur().task(
@@ -197,10 +193,39 @@ Do not include any extra commentary.'''
             input_text=predicted_diagnosis,
             final_model=aai.LemurModel.claude3_5_sonnet
         )
-        clinic_html = clinic_result.response
+        clinic_html = clinic_result.response.strip()
         print("Clinic suggestions:", clinic_html)
         socketio.emit('clinic_suggestions', {'text': clinic_html})
         report_transcript += clinic_html + "<br>"
+
+@socketio.on('suggest_correction')
+def handle_suggest_correction(data):
+    unclear_word = data.get('word')
+    context = data.get('context', '')
+    suggestion_prompt = f"""
+You are an AI language assistant specialized in medical transcription.
+An unclear word "{unclear_word}" appears in the following transcript context:
+"{context}"
+Please provide three correction suggestions that are phonetically similar and medically appropriate.
+Return your answer as a JSON array of strings with no extra commentary.
+"""
+    try:
+        suggestion_result = aai.Lemur().task(
+            suggestion_prompt,
+            input_text=suggestion_prompt,
+            final_model=aai.LemurModel.claude3_5_sonnet
+        )
+        suggestions = json.loads(suggestion_result.response)
+        emit('correction_suggestions', {'word': unclear_word, 'suggestions': suggestions})
+    except Exception as e:
+        print("Error generating suggestions:", e)
+        emit('correction_suggestions', {'word': unclear_word, 'suggestions': []})
+
+@socketio.on('re_analyze_transcript')
+def handle_re_analyze_transcript(data):
+    updated_transcript = data.get('updated_transcript', '')
+    if updated_transcript:
+        analyze_transcript(updated_transcript, reanalysis=True)
 
 @app.route('/')
 def index():
@@ -250,19 +275,22 @@ def report():
         report_transcript=report_transcript
     )
 
-async def generate_pdf():
+def generate_pdf():
     chrome_path = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
-    browser = await launch(executablePath=chrome_path, args=['--no-sandbox'])
-    page = await browser.newPage()
-    await page.goto('http://localhost:5000/report', {'waitUntil': 'networkidle0'})
-    await asyncio.sleep(3)
-    pdf_bytes = await page.pdf({'format': 'A4', 'printBackground': True})
-    await browser.close()
-    return pdf_bytes
+    async def _generate():
+        browser = await launch(executablePath=chrome_path, args=['--no-sandbox'])
+        page = await browser.newPage()
+        await page.goto('http://localhost:5000/report', {'waitUntil': 'networkidle0'})
+        await page.waitFor(3000)
+        pdf_bytes = await page.pdf({'format': 'A4', 'printBackground': True})
+        await browser.close()
+        return pdf_bytes
+    import asyncio
+    return asyncio.get_event_loop().run_until_complete(_generate())
 
 @app.route('/download_pdf')
 def download_pdf():
-    pdf_bytes = asyncio.run(generate_pdf())
+    pdf_bytes = generate_pdf()
     response = make_response(pdf_bytes)
     response.headers['Content-Type'] = 'application/pdf'
     response.headers['Content-Disposition'] = 'attachment; filename=report.pdf'

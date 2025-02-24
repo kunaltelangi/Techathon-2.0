@@ -1,4 +1,4 @@
-    <!DOCTYPE html>
+<!DOCTYPE html>
     <html lang="en">
     <head>
         <meta charset="UTF-8">
@@ -185,6 +185,8 @@
         <script>
             const startTrialButton = document.getElementById('startTrialButton');
             const loginButton = document.getElementById('loginButton');
+            const popup = document.getElementById('popup');
+            const overlay = document.getElementById('overlay');
         
             startTrialButton.addEventListener('click', () => {
                 window.location.href = 'trans.html';
@@ -193,6 +195,16 @@
             loginButton.addEventListener('click', () => {
                 window.location.href = 'login.html';
             });
+        
+            function openPopup() {
+                popup.style.display = 'block';
+                overlay.style.display = 'block';
+            }
+        
+            function closePopup() {
+                popup.style.display = 'none';
+                overlay.style.display = 'none';
+            }
         
             function openWindow() {
                 const modalContent = `
