@@ -15,7 +15,7 @@ aai.settings.api_key = assemblyai_api_key
 transcriber = None
 session_id = None
 transcriber_lock = threading.Lock()
-# On re-analysis, previous analysis is replaced.
+# On re-analysis, previous analysis is replaced .
 report_transcript = ""
 current_language = "english"  # default language for realtime transcription
 
