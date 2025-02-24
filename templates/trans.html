@@ -6,24 +6,76 @@
   <title>Jeevan Care</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
   <style>
-    .header { background-color: #0b1585; }
-    .transcript-container { display: flex; justify-content: space-between; margin: 20px; align-items: stretch; }
-    .transcript, .legend { width: 48%; background-color: white; padding: 15px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    .diagnosis-box, .precautions-box, .clinic-box { background-color: #f7f7f7; border: 1px solid #ddd; padding: 15px; margin: 20px auto; border-radius: 8px; width: 70%; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
-    button { padding: 10px 15px; margin: 5px; }
-    #language-select { padding: 8px 12px; font-size: 14px; font-weight: 500; border-radius: 6px; border: 1px solid #ccc; background-color: #fff; cursor: pointer; transition: border 0.2s ease-in-out; outline: none; }
-    #language-select:hover, #language-select:focus { border-color: #2980b9; }
-    .instructions { margin-top: 15px; font-size: 14px; color: #555; border-top: 1px solid #ccc; padding-top: 10px; }
-    .instructions h4 { margin: 0 0 8px 0; }
-    .instructions ul { padding-left: 20px; }
-    .instructions li { margin-bottom: 5px; }
-    .uncertain { border-bottom: 1px dotted red; cursor: pointer; }
-    .suggestion-box { position: fixed; top: 20%; left: 50%; transform: translateX(-50%); background: #fff; border: 1px solid #ccc; padding: 10px; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+    .header {
+      background-color: #B7B1F2;
+    }
+    /* Basic styling for the interface */
+    .transcript-container {
+      display: flex;
+      justify-content: space-between;
+      margin: 20px;
+      align-items: stretch; /* Ensure both children have equal height */
+    }
+    .transcript, .legend {
+      width: 48%;
+      background-color: white;
+      padding: 15px;
+      border-radius: 6px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    .diagnosis-box, .precautions-box, .clinic-box {
+      background-color: #f7f7f7;
+      border: 1px solid #ddd;
+      padding: 15px;
+      margin: 20px auto;
+      border-radius: 8px;
+      width: 70%;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    .diagnosis-box h2, .precautions-box h2, .clinic-box h2 {
+      margin-top: 0;
+    }
+    button {
+      padding: 10px 15px;
+      margin: 5px;
+    }
+    #language-select {
+      padding: 8px 12px;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      background-color: #fff;
+      cursor: pointer;
+      transition: border 0.2s ease-in-out;
+      outline: none;
+    }
+    #language-select:hover,
+    #language-select:focus {
+      border-color: #2980b9;
+    }
+    /* Styling for the instructions inside the legend */
+    .instructions {
+      margin-top: 15px;
+      font-size: 14px;
+      color: #555;
+      border-top: 1px solid #ccc;
+      padding-top: 10px;
+    }
+    .instructions h4 {
+      margin: 0 0 8px 0;
+    }
+    .instructions ul {
+      padding-left: 20px;
+    }
+    .instructions li {
+      margin-bottom: 5px;
+    }
   </style>
 </head>
 <body>
   <div class="header">
-    <h1 style="color: white;">Jeevan Care</h1>
+    <h1 style="color: #0b1585"><img src="../static/logo main.png" style="height:40px; width:auto;"/>Jeevan Care</h1>
   </div>
   <div class="container">
     <div class="controls" style="display: flex; align-items: center; justify-content: center; gap: 15px;">
@@ -52,13 +104,16 @@
         <p><span class="phi">Protected Health Information</span></p>
         <p><span class="tests">Tests & Treatments</span></p>
         <p><span style="color: blue;">Predicted Diagnosis</span></p>
+        
+        <!-- Instructions Container -->
         <div class="instructions">
           <h4>Instructions</h4>
           <ul>
-            <li>Press "Start Recording" to begin transcription.</li>
-            <li>Review the transcript and highlighted words.</li>
-            <li>Click an underlined (uncertain) word to see suggestions.</li>
-            <li>Select a suggestion to update the transcript and reanalyze.</li>
+            <li>Press the "Start Recording" button to begin the transcription process.</li>
+            <li>For best accuracy, please provide detailed information including the patient's name, age, gender, and a clear timeline of symptoms.</li>
+            <li>Include any minor details that may assist the system in making a more accurate diagnosis.</li>
+            <li>Review the real-time transcript and the highlighted information for your reference.</li>
+            <li>Click the "Generate Report" button to receive detailed insights on the diagnosis.</li>
           </ul>
         </div>
       </div>
@@ -77,7 +132,6 @@
       <div id="clinic-suggestions"></div>
     </div>
   </div>
-  
   <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
   <script>
     const socket = io();
@@ -91,22 +145,13 @@
     let isRecording = false;
     let analyzedText = '';
 
-    // Helper: Wrap known mis-transcriptions as uncertain.
-    function markUncertainWords(text) {
-      const uncertainWords = ["cuff", "feevr"];
-      uncertainWords.forEach(word => {
-        const regex = new RegExp(`\\b(${word})\\b(?!</span>)`, 'gi');
-        text = text.replace(regex, `<span class="uncertain">$1</span>`);
-      });
-      return text;
-    }
-
     toggleBtn.addEventListener('click', () => {
       isRecording = !isRecording;
       if (isRecording) {
         toggleBtn.textContent = "🛑 Stop Recording";
         toggleBtn.classList.remove('mic-off');
         toggleBtn.classList.add('mic-on');
+        // Get user location using the browser's geolocation API
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition((position) => {
             let location = {
@@ -130,65 +175,32 @@
     });
 
     socket.on('partial_transcript', data => {
-      let updatedText = analyzedText + data.text;
-      updatedText = markUncertainWords(updatedText);
-      transcriptText.innerHTML = updatedText;
+      transcriptText.innerHTML = analyzedText + data.text;
     });
 
     socket.on('formatted_transcript', data => {
-      analyzedText = data.text + "<br>";
-      let updatedText = markUncertainWords(analyzedText);
-      transcriptText.innerHTML = updatedText;
+      analyzedText += data.text + "<br>";
+      transcriptText.innerHTML = analyzedText;
       const diagnosisRegex = /<span\s+style="color:\s*blue;">(.*?)<\/span>/i;
       const match = diagnosisRegex.exec(data.text);
       if(match) {
-        diagnosisBox.innerHTML = match[1] + "<br>";
+        diagnosisBox.innerHTML += match[1] + "<br>";
       }
       reportBtn.style.display = 'inline-block';
     });
 
-    socket.on('precautions', data => { precautionsBox.innerHTML = data.text; });
-    socket.on('clinic_suggestions', data => { clinicBox.innerHTML = data.text; });
-    reportBtn.addEventListener('click', () => { window.location.href = '/report'; });
-    
-    // When an uncertain word is clicked, request correction suggestions.
-    document.addEventListener('click', function(e) {
-      if (e.target && e.target.classList.contains('uncertain')) {
-        const unclearWord = e.target.textContent;
-        const context = transcriptText.textContent;
-        socket.emit('suggest_correction', { word: unclearWord, context: context });
-        e.target.style.borderBottom = '2px dashed blue';
-      }
+    socket.on('precautions', data => {
+      precautionsBox.innerHTML = data.text;
     });
 
-    // When suggestions are received, show a suggestion box.
-    socket.on('correction_suggestions', data => {
-      const { word, suggestions } = data;
-      const suggestionBox = document.createElement('div');
-      suggestionBox.className = 'suggestion-box';
-      suggestionBox.innerHTML = `<p>Did you mean:</p>`;
-      
-      suggestions.forEach(suggestion => {
-        const btn = document.createElement('button');
-        btn.textContent = suggestion;
-        btn.style.margin = '5px';
-        btn.onclick = function() {
-          // Use DOM methods to replace all uncertain elements matching the word.
-          const uncertainElements = transcriptText.querySelectorAll('.uncertain');
-          uncertainElements.forEach(elem => {
-            if (elem.textContent.trim().toLowerCase() === word.toLowerCase()) {
-              elem.outerHTML = suggestion;
-            }
-          });
-          suggestionBox.remove();
-          // Extract plain text (without HTML) for re-analysis.
-          const plainText = transcriptText.textContent;
-          socket.emit('re_analyze_transcript', { updated_transcript: plainText });
-        };
-        suggestionBox.appendChild(btn);
-      });
-      document.body.appendChild(suggestionBox);
+    socket.on('clinic_suggestions', data => {
+      clinicBox.innerHTML = data.text;
     });
+
+    reportBtn.addEventListener('click', () => {
+      window.location.href = '/report';
+    });
+    
   </script>
 </body>
 </html>

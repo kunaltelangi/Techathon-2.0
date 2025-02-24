@@ -14,6 +14,13 @@
   text-align: center;
 }
 
+    /* ...existing code... */
+.logo img {
+    height: 50px;
+    width: auto; /* Maintain aspect ratio */
+    margin-right: 10px; /* Add some space between the logo and the text */
+}
+    /* ...existing code... */
 
 .cta-btn {
   width: 180px; /* Ensures both buttons have the same width */
